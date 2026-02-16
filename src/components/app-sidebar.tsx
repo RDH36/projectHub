@@ -52,13 +52,13 @@ export function AppSidebar({
   const isActive = (segment: string) => pathname.includes(`/${segment}`)
 
   return (
-    <Sidebar>
+    <Sidebar collapsible="icon">
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
               <Link href={`/dashboard/${currentSlug}/feedbacks`}>
-                <div className="bg-primary text-primary-foreground flex size-8 items-center justify-center rounded-md">
+                <div className="bg-primary text-primary-foreground flex size-8 shrink-0 items-center justify-center rounded-md">
                   <LayoutDashboard className="size-4" />
                 </div>
                 <span className="text-base font-semibold">ProjectHub</span>
@@ -70,7 +70,7 @@ export function AppSidebar({
 
       <SidebarContent>
         {/* Project Switcher */}
-        <SidebarGroup>
+        <SidebarGroup className="group-data-[collapsible=icon]:hidden">
           <SidebarGroupLabel>Projet</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
@@ -132,7 +132,11 @@ export function AppSidebar({
         <SidebarMenu>
           <SidebarMenuItem>
             <form action="/auth/signout" method="POST">
-              <SidebarMenuButton type="submit" className="w-full">
+              <SidebarMenuButton
+                type="submit"
+                className="w-full"
+                tooltip="Se déconnecter"
+              >
                 <LogOut />
                 <span>Se déconnecter</span>
               </SidebarMenuButton>
