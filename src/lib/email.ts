@@ -24,6 +24,8 @@ export async function sendBatch(emails: EmailPayload[]) {
         replyTo: fromEmail,
         headers: {
           'List-Unsubscribe': `<mailto:${fromEmail}?subject=unsubscribe>`,
+          'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+          'X-Entity-Ref-ID': crypto.randomUUID(),
         },
       }))
     )
