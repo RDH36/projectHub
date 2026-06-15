@@ -6,6 +6,7 @@ import {
   MessageSquare,
   Users,
   Mail,
+  ClipboardList,
   LogOut,
   ChevronsUpDown,
   LayoutDashboard,
@@ -36,6 +37,7 @@ const navItems = [
   { label: 'Feedbacks', icon: MessageSquare, segment: 'feedbacks' },
   { label: 'Abonnés', icon: Users, segment: 'subscribers' },
   { label: 'Newsletter', icon: Mail, segment: 'newsletter' },
+  { label: 'Sondages', icon: ClipboardList, segment: 'surveys' },
 ]
 
 export function AppSidebar({

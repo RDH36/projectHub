@@ -45,6 +45,39 @@ export type Database = {
         }
         Relationships: []
       }
+      feature_surveys: {
+        Row: {
+          app_version: string | null
+          created_at: string
+          currency: string | null
+          device_platform: string | null
+          id: string
+          project: string | null
+          response: Json
+          survey_key: string
+        }
+        Insert: {
+          app_version?: string | null
+          created_at?: string
+          currency?: string | null
+          device_platform?: string | null
+          id?: string
+          project?: string | null
+          response?: Json
+          survey_key: string
+        }
+        Update: {
+          app_version?: string | null
+          created_at?: string
+          currency?: string | null
+          device_platform?: string | null
+          id?: string
+          project?: string | null
+          response?: Json
+          survey_key?: string
+        }
+        Relationships: []
+      }
       newsletter_sends: {
         Row: {
           id: string
