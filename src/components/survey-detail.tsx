@@ -1,6 +1,7 @@
 'use client'
 
-import { Tables, Json } from '@/lib/types/database'
+import { Tables } from '@/lib/types/database'
+import { parseSurveyResponse, formatRawValue } from '@/lib/survey'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import {
@@ -23,39 +24,55 @@ function formatDateTime(dateStr: string | null) {
   })
 }
 
-function formatValue(value: Json): string {
-  if (value === null || value === undefined) return '—'
-  if (typeof value === 'boolean') return value ? 'Oui' : 'Non'
-  if (Array.isArray(value)) return value.map((v) => formatValue(v)).join(', ')
-  if (typeof value === 'object') return JSON.stringify(value, null, 2)
-  return String(value)
-}
+function ResponseBody({ response }: { response: Survey['response'] }) {
+  const { items, comment, raw } = parseSurveyResponse(response)
 
-function ResponseEntries({ response }: { response: Json }) {
-  if (
-    response === null ||
-    typeof response !== 'object' ||
-    Array.isArray(response)
-  ) {
-    return <p className="whitespace-pre-wrap text-sm">{formatValue(response)}</p>
+  if (items.length > 0) {
+    return (
+      <div className="space-y-3">
+        {items.map((item, index) => (
+          <div key={item.key ?? index}>
+            <p className="text-sm font-medium text-muted-foreground">
+              {item.question ?? item.key ?? `Question ${index + 1}`}
+            </p>
+            <p className="mt-0.5 whitespace-pre-wrap text-sm">
+              {item.answer ?? formatRawValue(item.value)}
+            </p>
+          </div>
+        ))}
+        {comment && (
+          <div>
+            <p className="text-sm font-medium text-muted-foreground">
+              Commentaire
+            </p>
+            <p className="mt-0.5 whitespace-pre-wrap text-sm">{comment}</p>
+          </div>
+        )}
+      </div>
+    )
   }
 
-  const entries = Object.entries(response)
-  if (entries.length === 0) {
-    return <p className="text-sm text-muted-foreground">Réponse vide</p>
+  if (raw) {
+    const entries = Object.entries(raw)
+    if (entries.length === 0) {
+      return <p className="text-sm text-muted-foreground">Réponse vide</p>
+    }
+    return (
+      <div className="space-y-3">
+        {entries.map(([key, value]) => (
+          <div key={key}>
+            <p className="text-sm font-medium text-muted-foreground">{key}</p>
+            <p className="mt-0.5 whitespace-pre-wrap text-sm">
+              {formatRawValue(value)}
+            </p>
+          </div>
+        ))}
+      </div>
+    )
   }
 
   return (
-    <div className="space-y-3">
-      {entries.map(([key, value]) => (
-        <div key={key}>
-          <p className="text-sm font-medium text-muted-foreground">{key}</p>
-          <p className="mt-0.5 whitespace-pre-wrap text-sm">
-            {formatValue(value ?? null)}
-          </p>
-        </div>
-      ))}
-    </div>
+    <p className="whitespace-pre-wrap text-sm">{formatRawValue(response)}</p>
   )
 }
 
@@ -86,8 +103,19 @@ export function SurveyDetail({
             <p className="mb-2 text-sm font-medium text-muted-foreground">
               Réponse
             </p>
-            <ResponseEntries response={survey.response} />
+            <ResponseBody response={survey.response} />
           </div>
+          {survey.email && (
+            <>
+              <Separator />
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">
+                  Email de contact
+                </p>
+                <p className="mt-0.5 text-sm">{survey.email}</p>
+              </div>
+            </>
+          )}
           <Separator />
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>

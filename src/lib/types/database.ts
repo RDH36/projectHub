@@ -51,6 +51,7 @@ export type Database = {
           created_at: string
           currency: string | null
           device_platform: string | null
+          email: string | null
           id: string
           project: string | null
           response: Json
@@ -61,6 +62,7 @@ export type Database = {
           created_at?: string
           currency?: string | null
           device_platform?: string | null
+          email?: string | null
           id?: string
           project?: string | null
           response?: Json
@@ -71,6 +73,7 @@ export type Database = {
           created_at?: string
           currency?: string | null
           device_platform?: string | null
+          email?: string | null
           id?: string
           project?: string | null
           response?: Json

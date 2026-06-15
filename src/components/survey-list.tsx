@@ -1,7 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { Tables, Json } from '@/lib/types/database'
+import { Tables } from '@/lib/types/database'
+import { responseSummary } from '@/lib/survey'
 import { Badge } from '@/components/ui/badge'
 import {
   Table,
@@ -24,29 +25,6 @@ function formatDate(dateStr: string | null) {
   })
 }
 
-function responsePreview(response: Json): string {
-  if (response === null || typeof response !== 'object') {
-    return String(response ?? '—')
-  }
-  if (Array.isArray(response)) {
-    return response.length ? `${response.length} éléments` : '—'
-  }
-  const entries = Object.entries(response)
-  if (entries.length === 0) return '—'
-  return entries
-    .slice(0, 3)
-    .map(([key, value]) => `${key}: ${formatPreviewValue(value)}`)
-    .join(' · ')
-}
-
-function formatPreviewValue(value: Json | undefined): string {
-  if (value === null || value === undefined) return '—'
-  if (typeof value === 'boolean') return value ? 'Oui' : 'Non'
-  if (Array.isArray(value)) return `${value.length} él.`
-  if (typeof value === 'object') return '{…}'
-  return String(value)
-}
-
 export function SurveyList({ surveys }: { surveys: Survey[] }) {
   const [selected, setSelected] = useState<Survey | null>(null)
 
@@ -65,8 +43,8 @@ export function SurveyList({ surveys }: { surveys: Survey[] }) {
           <TableRow>
             <TableHead>Sondage</TableHead>
             <TableHead className="w-[40%]">Réponse</TableHead>
+            <TableHead>Email</TableHead>
             <TableHead>Plateforme</TableHead>
-            <TableHead>Version</TableHead>
             <TableHead>Date</TableHead>
           </TableRow>
         </TableHeader>
@@ -83,13 +61,13 @@ export function SurveyList({ surveys }: { surveys: Survey[] }) {
                 </Badge>
               </TableCell>
               <TableCell className="text-muted-foreground">
-                {responsePreview(survey.response)}
+                {responseSummary(survey.response)}
+              </TableCell>
+              <TableCell className="text-muted-foreground">
+                {survey.email || '—'}
               </TableCell>
               <TableCell className="text-muted-foreground">
                 {survey.device_platform || '—'}
-              </TableCell>
-              <TableCell className="text-muted-foreground">
-                {survey.app_version || '—'}
               </TableCell>
               <TableCell className="text-muted-foreground">
                 {formatDate(survey.created_at)}
