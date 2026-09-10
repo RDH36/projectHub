@@ -3,6 +3,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { PageHeader, StatChip } from '@/components/layout/page-header'
 import { NewsletterEditor } from '@/components/newsletter/newsletter-editor'
 import { NewsletterHistory } from '@/components/newsletter/newsletter-history'
+import { likeExact } from '@/lib/utils'
 
 export default async function NewsletterPage({
   params,
@@ -16,18 +17,18 @@ export default async function NewsletterPage({
     supabase
       .from('newsletter_templates')
       .select('*')
-      .ilike('project', projectSlug)
+      .ilike('project', likeExact(projectSlug))
       .order('updated_at', { ascending: false }),
     supabase
       .from('newsletter_sends')
       .select('*')
-      .ilike('project', projectSlug)
+      .ilike('project', likeExact(projectSlug))
       .order('sent_at', { ascending: false })
       .limit(10),
     supabase
       .from('newsletter_subscribers')
       .select('*')
-      .ilike('project', projectSlug)
+      .ilike('project', likeExact(projectSlug))
       .eq('newsletter_approval', true)
       .order('created_at', { ascending: false }),
   ])

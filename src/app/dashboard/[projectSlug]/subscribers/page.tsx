@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { PageHeader, StatChip } from '@/components/layout/page-header'
 import { SubscriberList } from '@/components/subscribers/subscriber-list'
+import { likeExact } from '@/lib/utils'
 
 export default async function SubscribersPage({
   params,
@@ -13,7 +14,7 @@ export default async function SubscribersPage({
   const { data: subscribers } = await supabase
     .from('newsletter_subscribers')
     .select('*')
-    .ilike('project', projectSlug)
+    .ilike('project', likeExact(projectSlug))
     .eq('newsletter_approval', true)
     .order('created_at', { ascending: false })
 

@@ -4,6 +4,7 @@ import { authActionClient } from './safe-action'
 import { z } from 'zod'
 import { revalidatePath } from 'next/cache'
 import { sendBatch } from '@/lib/email'
+import { likeExact } from '@/lib/utils'
 
 export const saveTemplate = authActionClient
   .schema(z.object({
@@ -42,23 +43,25 @@ export const sendNewsletter = authActionClient
       .single()
     const senderName = project?.name ?? projectSlug
 
-    let emails: { to: string; subject: string; html: string; senderName: string }[]
+    // Les destinataires sont toujours pris parmi les abonnés consentants du projet :
+    // une sélection manuelle ne peut pas injecter d'adresses extérieures.
+    const { data: subscribers, error: subError } = await supabase
+      .from('newsletter_subscribers')
+      .select('email')
+      .ilike('project', likeExact(projectSlug))
+      .eq('newsletter_approval', true)
 
-    if (selectedEmails && selectedEmails.length > 0) {
-      emails = selectedEmails.map((email) => ({ to: email, subject, html, senderName }))
-    } else {
-      const { data: subscribers, error: subError } = await supabase
-        .from('newsletter_subscribers')
-        .select('email')
-        .ilike('project', projectSlug)
-        .eq('newsletter_approval', true)
+    if (subError) throw new Error(subError.message)
+    if (!subscribers || subscribers.length === 0) throw new Error('Aucun abonné trouvé')
 
-      if (subError) throw new Error(subError.message)
-      if (!subscribers || subscribers.length === 0)
-        throw new Error('Aucun abonné trouvé')
+    const allowed = new Set(subscribers.map((s) => s.email.toLowerCase()))
+    const targets =
+      selectedEmails && selectedEmails.length > 0
+        ? selectedEmails.filter((email) => allowed.has(email.toLowerCase()))
+        : subscribers.map((s) => s.email)
+    if (targets.length === 0) throw new Error('Aucun destinataire valide dans la sélection')
 
-      emails = subscribers.map((s) => ({ to: s.email, subject, html, senderName }))
-    }
+    const emails = targets.map((to) => ({ to, subject, html, senderName }))
 
     await sendBatch(emails)
 

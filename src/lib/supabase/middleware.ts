@@ -1,5 +1,6 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
+import { isAdminEmail } from '@/lib/auth/admin'
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request })
@@ -17,7 +18,13 @@ export async function updateSession(request: NextRequest) {
       },
     }
   )
-  const { data: { user } } = await supabase.auth.getUser()
+  const { data: { user: authUser } } = await supabase.auth.getUser()
+  // Un compte hors liste blanche est traité comme non connecté (et déconnecté)
+  let user = authUser
+  if (user && !isAdminEmail(user.email)) {
+    await supabase.auth.signOut()
+    user = null
+  }
 
   if (!user && !request.nextUrl.pathname.startsWith('/login')) {
     const url = request.nextUrl.clone()

@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { PageHeader, StatChip } from '@/components/layout/page-header'
 import { FeedbackFilters } from '@/components/feedbacks/feedback-filters'
 import { FeedbackList } from '@/components/feedbacks/feedback-list'
+import { likeExact } from '@/lib/utils'
 
 export default async function FeedbacksPage({
   params,
@@ -17,7 +18,7 @@ export default async function FeedbacksPage({
   let query = supabase
     .from('feedback')
     .select('*')
-    .ilike('project', projectSlug)
+    .ilike('project', likeExact(projectSlug))
     .order('created_at', { ascending: false })
 
   if (search.status) query = query.eq('status', search.status)

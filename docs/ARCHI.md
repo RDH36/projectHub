@@ -414,7 +414,8 @@ project-hub/
 
 - `src/lib/analytics/range.ts` — période `?range=7d|30d|90d`, période précédente de même durée, jours manquants comblés.
 - `src/lib/analytics/posthog-queries.ts` — requêtes HogQL (un seul scan pour KPIs courants + précédents).
-- `src/lib/analytics/posthog.ts`, `vercel.ts` — fetch côté serveur, cache Next `revalidate: 300`, résultat typé `SourceState<T>` (`ok` | `unconfigured` | `error`). Une source non configurée affiche un état explicite au lieu de casser la page.
+- `src/lib/analytics/posthog.ts`, `vercel.ts` — fetch côté serveur, résultat typé `SourceState<T>` (`ok` | `unconfigured` | `error`). Une source non configurée affiche un état explicite au lieu de casser la page.
+- **Budget API PostHog** : le plan gratuit limite les données lues par heure (`api_queries_budget_exceeded`, HTTP 429). Pour rester dessous : 4 requêtes par (projet, période) au lieu de 7 (les classements sont regroupés en un seul scan `ARRAY JOIN`), fenêtre de 2× la période au maximum, et `unstable_cache` de 15 min partagé entre la vue d'ensemble et la page Analytics, uniquement sur succès (une erreur n'est jamais mise en cache). Les requêtes MCP faites pendant le développement consomment le même budget.
 - `src/components/analytics/` — tuiles KPI (delta vs période précédente + sparkline SVG), courbes Recharts, classements, sélecteur de période.
 - Pages : `/dashboard/[slug]` (vue d'ensemble : KPIs mixtes, trafic, derniers feedbacks, audience newsletter) et `/dashboard/[slug]/analytics` (détail PostHog + Vercel).
 
@@ -442,3 +443,16 @@ Code : `src/lib/analytics/revenuecat.ts`, section « Abonnements et revenus » d
 ### Transitions plein écran
 
 `components/layout/screen-overlay.tsx` (portail, voile flouté) est affiché pendant le changement de projet (`useTransition` autour de `router.push`) et pendant la déconnexion (POST `/auth/signout` en `fetch`, puis `window.location.assign('/login')`).
+
+---
+
+## Sécurité (audit du 10/09/2026)
+
+- **Accès** : middleware (`src/proxy.ts`) + `authActionClient` exigent un utilisateur Supabase. `ADMIN_EMAILS` (liste blanche) est vérifiée aux deux endroits ; sans cette variable tout compte authentifié passe, donc **désactiver les inscriptions publiques dans Supabase Auth** et renseigner `ADMIN_EMAILS` en production.
+- **Liste blanche en base** (migrations `restrict_access_to_admin_allowlist`, `move_admin_helpers_to_private_schema`) : table `private.admin_allowlist` (schéma non exposé par l'API), fonction `private.is_admin()` utilisée par toutes les policies RLS à la place de « authentifié », et déclencheur `block_unlisted_signup` sur `auth.users` qui refuse toute inscription hors liste. Pour ajouter un admin : `INSERT INTO private.admin_allowlist (email) VALUES ('…')` puis l'ajouter à `ADMIN_EMAILS`.
+- **RLS** : toutes les tables ont RLS ; `feedback`, `feature_surveys`, `newsletter_subscribers` autorisent l'INSERT anonyme (apps mobiles), le reste exige `private.is_admin()`.
+- **En-têtes** (`next.config.ts`) : X-Frame-Options DENY, nosniff, Referrer-Policy, Permissions-Policy, HSTS, `poweredByHeader: false`.
+- **CSRF** : `/auth/signout` refuse les POST dont l'`Origin` diffère du site ; les Server Actions bénéficient du contrôle d'origine natif de Next.
+- **Filtres** : le slug de projet est échappé (`likeExact`) avant tout `ilike`, pas de joker injectable. Les requêtes HogQL échappent les littéraux (`literal`).
+- **Newsletter** : la sélection manuelle est filtrée côté serveur contre les abonnés consentants du projet. Le HTML est prévisualisé dans une iframe `sandbox` sans scripts.
+- **Secrets** : uniquement côté serveur (`server-only`), `.env*` ignoré par git, aucun secret dans l'historique.

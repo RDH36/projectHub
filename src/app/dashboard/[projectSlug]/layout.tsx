@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar'
 import { AppSidebar } from '@/components/layout/app-sidebar'
 import { DashboardHeader } from '@/components/layout/dashboard-header'
+import { likeExact } from '@/lib/utils'
 
 export default async function DashboardLayout({
   children,
@@ -19,7 +20,7 @@ export default async function DashboardLayout({
     supabase
       .from('feedback')
       .select('id', { count: 'exact', head: true })
-      .ilike('project', projectSlug)
+      .ilike('project', likeExact(projectSlug))
       .eq('status', 'pending'),
   ])
 

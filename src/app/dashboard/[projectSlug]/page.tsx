@@ -10,6 +10,7 @@ import { KpiRow } from '@/components/overview/kpi-row'
 import { TrafficPanel } from '@/components/overview/traffic-panel'
 import { RecentFeedbacks } from '@/components/overview/recent-feedbacks'
 import { AudiencePanel } from '@/components/overview/audience-panel'
+import { likeExact } from '@/lib/utils'
 
 export default async function OverviewPage({
   params,
@@ -41,24 +42,24 @@ export default async function OverviewPage({
       supabase
         .from('feedback')
         .select('*')
-        .ilike('project', projectSlug)
+        .ilike('project', likeExact(projectSlug))
         .order('created_at', { ascending: false }),
       supabase
         .from('newsletter_subscribers')
         .select('created_at')
-        .ilike('project', projectSlug)
+        .ilike('project', likeExact(projectSlug))
         .eq('newsletter_approval', true)
         .order('created_at'),
       supabase
         .from('newsletter_sends')
         .select('*')
-        .ilike('project', projectSlug)
+        .ilike('project', likeExact(projectSlug))
         .order('sent_at', { ascending: false })
         .limit(3),
       supabase
         .from('feature_surveys')
         .select('id', { count: 'exact', head: true })
-        .ilike('project', projectSlug)
+        .ilike('project', likeExact(projectSlug))
         .gte('created_at', sinceIso),
     ])
 

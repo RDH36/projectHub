@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { PageHeader, StatChip } from '@/components/layout/page-header'
 import { SurveyFilters } from '@/components/surveys/survey-filters'
 import { SurveyList } from '@/components/surveys/survey-list'
+import { likeExact } from '@/lib/utils'
 
 export default async function SurveysPage({
   params,
@@ -17,7 +18,7 @@ export default async function SurveysPage({
   const { data: surveys } = await supabase
     .from('feature_surveys')
     .select('*')
-    .ilike('project', projectSlug)
+    .ilike('project', likeExact(projectSlug))
     .order('created_at', { ascending: false })
 
   const all = surveys || []

@@ -68,15 +68,15 @@ ORDER BY date`
 }
 
 /**
- * Nouveaux utilisateurs par jour de première apparition, sur la période
- * courante et la précédente. On regarde une fenêtre de 3× la période pour
- * distinguer un nouveau venu d'un utilisateur de retour. `person.created_at`
- * est utilisé quand il est fiable ; certaines apps (personnes anonymes) ont
- * une date à 1970, d'où le repli sur le premier événement observé.
+ * Nouveaux utilisateurs par jour de première apparition sur la période
+ * courante. La période précédente sert de recul pour distinguer un nouveau
+ * venu d'un utilisateur de retour (un seul scan de 2× la période).
+ * `person.created_at` est utilisé quand il est fiable ; certaines apps
+ * (personnes anonymes) ont une date à 1970, d'où le repli sur le premier
+ * événement observé.
  */
 export function newUsersQuery(scope: Scope, range: AnalyticsRange) {
   const b = bounds(range)
-  const lookback = `${b.prev} - INTERVAL ${range.days} DAY`
   return `
 SELECT toDate(first_seen) AS date, count() AS new_users
 FROM (
@@ -84,65 +84,46 @@ FROM (
     person_id,
     if(any(person.created_at) > toDateTime('2000-01-01 00:00:00'), any(person.created_at), min(timestamp)) AS first_seen
   FROM events
-  WHERE ${baseWhere(scope, lookback, b.end)}
+  WHERE ${baseWhere(scope, b.prev, b.end)}
   GROUP BY person_id
 )
-WHERE first_seen >= ${b.prev}
+WHERE first_seen >= ${b.cur}
 GROUP BY date
 ORDER BY date`
 }
 
-export function topEventsQuery(scope: Scope, range: AnalyticsRange) {
+/**
+ * Les quatre classements (événements, écrans/pages, pays, versions/navigateurs)
+ * en un seul scan : ARRAY JOIN déplie chaque événement en 4 dimensions, une
+ * fenêtre garde les 8 premières valeurs par dimension.
+ */
+export function breakdownsQuery(scope: Scope, range: AnalyticsRange) {
   const b = bounds(range)
+  const screenEvent = scope.kind === 'app' ? '$screen' : '$pageview'
+  const screenProp = scope.kind === 'app' ? 'properties.$screen_name' : 'properties.$pathname'
+  const versionProp = scope.kind === 'app' ? 'properties.$app_version' : 'properties.$browser'
   return `
-SELECT event AS label, count() AS value
-FROM events
-WHERE ${baseWhere(scope, b.cur, b.end)}
-  AND event NOT LIKE '$%'
-  AND event NOT LIKE 'Application %'
-GROUP BY label
-ORDER BY value DESC
-LIMIT 8`
-}
-
-/** Écrans (app) ou pages (web) les plus vus. */
-export function topScreensQuery(scope: Scope, range: AnalyticsRange) {
-  const b = bounds(range)
-  const event = scope.kind === 'app' ? '$screen' : '$pageview'
-  const prop = scope.kind === 'app' ? 'properties.$screen_name' : 'properties.$pathname'
-  return `
-SELECT ${prop} AS label, count() AS value
-FROM events
-WHERE ${baseWhere(scope, b.cur, b.end)}
-  AND event = '${event}'
-  AND notEmpty(toString(${prop}))
-GROUP BY label
-ORDER BY value DESC
-LIMIT 8`
-}
-
-export function countriesQuery(scope: Scope, range: AnalyticsRange) {
-  const b = bounds(range)
-  return `
-SELECT properties.$geoip_country_name AS label, uniq(person_id) AS value
-FROM events
-WHERE ${baseWhere(scope, b.cur, b.end)}
-  AND notEmpty(toString(properties.$geoip_country_name))
-GROUP BY label
-ORDER BY value DESC
-LIMIT 6`
-}
-
-/** Versions d'app (app) ou navigateurs (web). */
-export function versionsQuery(scope: Scope, range: AnalyticsRange) {
-  const b = bounds(range)
-  const prop = scope.kind === 'app' ? 'properties.$app_version' : 'properties.$browser'
-  return `
-SELECT ${prop} AS label, uniq(person_id) AS value
-FROM events
-WHERE ${baseWhere(scope, b.cur, b.end)}
-  AND notEmpty(toString(${prop}))
-GROUP BY label
-ORDER BY value DESC
-LIMIT 6`
+SELECT dim, label, events, persons
+FROM (
+  SELECT
+    dim,
+    label,
+    count() AS events,
+    uniq(person_id) AS persons,
+    row_number() OVER (PARTITION BY dim ORDER BY count() DESC) AS rn
+  FROM events
+  ARRAY JOIN
+    ['event', 'screen', 'country', 'version'] AS dim,
+    [
+      if(event NOT LIKE '$%' AND event NOT LIKE 'Application %', event, ''),
+      if(event = '${screenEvent}', toString(${screenProp}), ''),
+      toString(properties.$geoip_country_name),
+      toString(${versionProp})
+    ] AS label
+  WHERE ${baseWhere(scope, b.cur, b.end)}
+    AND label != ''
+  GROUP BY dim, label
+)
+WHERE rn <= 8
+ORDER BY dim, events DESC`
 }
