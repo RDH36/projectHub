@@ -175,19 +175,28 @@ export type Database = {
           created_at: string | null
           id: string
           name: string
+          posthog_app_name: string | null
+          posthog_host: string | null
           slug: string
+          vercel_project_id: string | null
         }
         Insert: {
           created_at?: string | null
           id?: string
           name: string
+          posthog_app_name?: string | null
+          posthog_host?: string | null
           slug: string
+          vercel_project_id?: string | null
         }
         Update: {
           created_at?: string | null
           id?: string
           name?: string
+          posthog_app_name?: string | null
+          posthog_host?: string | null
           slug?: string
+          vercel_project_id?: string | null
         }
         Relationships: []
       }

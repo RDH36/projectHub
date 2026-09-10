@@ -1,7 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
-import { Badge } from '@/components/ui/badge'
-import { Separator } from '@/components/ui/separator'
-import { SubscriberList } from '@/components/subscriber-list'
+import { PageHeader, StatChip } from '@/components/layout/page-header'
+import { SubscriberList } from '@/components/subscribers/subscriber-list'
 
 export default async function SubscribersPage({
   params,
@@ -18,16 +17,27 @@ export default async function SubscribersPage({
     .eq('newsletter_approval', true)
     .order('created_at', { ascending: false })
 
-  const count = subscribers?.length ?? 0
+  const list = subscribers ?? []
+  const monthAgo = new Date()
+  monthAgo.setDate(monthAgo.getDate() - 30)
+  const recent = list.filter((s) => new Date(s.created_at) >= monthAgo).length
 
   return (
-    <div className="flex flex-col gap-6 p-6">
-      <div className="flex items-center gap-3">
-        <h1 className="text-2xl font-semibold tracking-tight">Abonnés</h1>
-        <Badge variant="secondary">{count}</Badge>
+    <>
+      <PageHeader
+        eyebrow="Communauté"
+        title="Abonnés"
+        description="Personnes ayant accepté de recevoir la newsletter."
+        stats={
+          <>
+            <StatChip value={list.length} label="abonnés" />
+            <StatChip value={`+${recent}`} label="sur 30 jours" tone="success" />
+          </>
+        }
+      />
+      <div className="rise rise-2">
+        <SubscriberList subscribers={list} />
       </div>
-      <Separator />
-      <SubscriberList subscribers={subscribers ?? []} />
-    </div>
+    </>
   )
 }

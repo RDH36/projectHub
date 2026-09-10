@@ -397,3 +397,36 @@ project-hub/
   }
 }
 ```
+
+---
+
+## Analytics (PostHog + Vercel) — ajouté le 10/09/2026
+
+### Sources
+
+| Source | Données | Accès | Isolation par projet |
+|--------|---------|-------|----------------------|
+| **PostHog** | Utilisateurs actifs / nouveaux, sessions, événements, écrans, pays, versions | API Query (`POST /api/projects/:id/query/`, HogQL) avec clé personnelle `POSTHOG_API_KEY` | Un seul projet PostHog partagé : filtre `properties.$app_name = projects.posthog_app_name` (apps) ou `properties.$host = projects.posthog_host` (sites) |
+| **Vercel** | Visiteurs, pages vues, pages, référents, pays, appareils | Web Analytics API (`GET /v1/query/web-analytics/visits/aggregate`) avec `VERCEL_TOKEN` (+ `VERCEL_TEAM_ID`) | `projects.vercel_project_id` (`prj_…`) |
+| **Supabase** | Feedbacks, sondages, abonnés, envois | Client existant | `project` (slug) |
+
+### Code
+
+- `src/lib/analytics/range.ts` — période `?range=7d|30d|90d`, période précédente de même durée, jours manquants comblés.
+- `src/lib/analytics/posthog-queries.ts` — requêtes HogQL (un seul scan pour KPIs courants + précédents).
+- `src/lib/analytics/posthog.ts`, `vercel.ts` — fetch côté serveur, cache Next `revalidate: 300`, résultat typé `SourceState<T>` (`ok` | `unconfigured` | `error`). Une source non configurée affiche un état explicite au lieu de casser la page.
+- `src/components/analytics/` — tuiles KPI (delta vs période précédente + sparkline SVG), courbes Recharts, classements, sélecteur de période.
+- Pages : `/dashboard/[slug]` (vue d'ensemble : KPIs mixtes, trafic, derniers feedbacks, audience newsletter) et `/dashboard/[slug]/analytics` (détail PostHog + Vercel).
+
+### Migration `add_analytics_config_to_projects`
+
+```sql
+ALTER TABLE projects
+  ADD COLUMN posthog_app_name text,   -- valeur de $app_name (ex. 'Mitsitsy')
+  ADD COLUMN posthog_host text,       -- valeur de $host pour un site web
+  ADD COLUMN vercel_project_id text;  -- prj_… du projet Vercel
+```
+
+### Design system
+
+Palette « papier & encre » (surfaces chaudes, accent orange brûlé), police d'affichage Bricolage Grotesque + Geist, mode sombre via `next-themes`. Les couleurs de graphique `--chart-1..6` forment une palette validée (daltonisme, contraste) : ne pas réordonner sans re-valider.

@@ -2,6 +2,7 @@
 
 import { Tables } from '@/lib/types/database'
 import { parseSurveyResponse, formatRawValue } from '@/lib/survey'
+import { formatDateTime } from '@/lib/format'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import {
@@ -12,17 +13,6 @@ import {
 } from '@/components/ui/dialog'
 
 type Survey = Tables<'feature_surveys'>
-
-function formatDateTime(dateStr: string | null) {
-  if (!dateStr) return '—'
-  return new Date(dateStr).toLocaleDateString('fr-FR', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  })
-}
 
 function ResponseBody({ response }: { response: Survey['response'] }) {
   const { items, comment, raw } = parseSurveyResponse(response)
@@ -91,7 +81,7 @@ export function SurveyDetail({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[85vh] max-w-lg overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
+          <DialogTitle className="flex items-center gap-2 font-display text-xl">
             Détail du sondage
             <Badge variant="secondary" className="font-mono text-xs">
               {survey.survey_key}
@@ -119,19 +109,19 @@ export function SurveyDetail({
           <Separator />
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
-              <p className="font-medium text-muted-foreground">Plateforme</p>
+              <p className="eyebrow mb-0.5">Plateforme</p>
               <p>{survey.device_platform || '—'}</p>
             </div>
             <div>
-              <p className="font-medium text-muted-foreground">Version</p>
+              <p className="eyebrow mb-0.5">Version</p>
               <p>{survey.app_version || '—'}</p>
             </div>
             <div>
-              <p className="font-medium text-muted-foreground">Devise</p>
+              <p className="eyebrow mb-0.5">Devise</p>
               <p>{survey.currency || '—'}</p>
             </div>
             <div>
-              <p className="font-medium text-muted-foreground">Date</p>
+              <p className="eyebrow mb-0.5">Date</p>
               <p>{formatDateTime(survey.created_at)}</p>
             </div>
           </div>

@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
-import { Badge } from '@/components/ui/badge'
-import { FeedbackFilters } from '@/components/feedback-filters'
-import { FeedbackList } from '@/components/feedback-list'
+import { PageHeader, StatChip } from '@/components/layout/page-header'
+import { FeedbackFilters } from '@/components/feedbacks/feedback-filters'
+import { FeedbackList } from '@/components/feedbacks/feedback-list'
 
 export default async function FeedbacksPage({
   params,
@@ -20,35 +20,32 @@ export default async function FeedbacksPage({
     .ilike('project', projectSlug)
     .order('created_at', { ascending: false })
 
-  if (search.status) {
-    query = query.eq('status', search.status)
-  }
-  if (search.category) {
-    query = query.eq('category', search.category)
-  }
+  if (search.status) query = query.eq('status', search.status)
+  if (search.category) query = query.eq('category', search.category)
 
   const { data: feedbacks } = await query
-
   const all = feedbacks || []
   const pendingCount = all.filter((f) => f.status === 'pending').length
   const treatedCount = all.filter((f) => f.status === 'treated').length
 
   return (
-    <div className="flex flex-col gap-6 p-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Feedbacks</h1>
-        <div className="flex gap-2">
-          <Badge variant="secondary">{all.length} total</Badge>
-          <Badge variant="outline" className="border-yellow-500 text-yellow-600">
-            {pendingCount} en attente
-          </Badge>
-          <Badge variant="outline" className="border-green-500 text-green-600">
-            {treatedCount} traités
-          </Badge>
-        </div>
+    <>
+      <PageHeader
+        eyebrow="Communauté"
+        title="Feedbacks"
+        description="Retours envoyés depuis l’application. Cliquez sur une ligne pour catégoriser ou marquer comme traité."
+        actions={<FeedbackFilters />}
+        stats={
+          <>
+            <StatChip value={all.length} label="au total" />
+            <StatChip value={pendingCount} label="en attente" tone="warning" />
+            <StatChip value={treatedCount} label="traités" tone="success" />
+          </>
+        }
+      />
+      <div className="rise rise-2 overflow-hidden rounded-xl border bg-card">
+        <FeedbackList feedbacks={all} projectSlug={projectSlug} />
       </div>
-      <FeedbackFilters />
-      <FeedbackList feedbacks={all} projectSlug={projectSlug} />
-    </div>
+    </>
   )
 }

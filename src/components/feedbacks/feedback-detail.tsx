@@ -10,7 +10,8 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
+import { StatusBadge } from '@/components/feedbacks/feedback-badges'
+import { formatDateTime } from '@/lib/format'
 import { Separator } from '@/components/ui/separator'
 import {
   Select,
@@ -22,17 +23,6 @@ import {
 import { updateFeedbackStatus, updateFeedbackCategory } from '@/actions/feedback.actions'
 
 type Feedback = Tables<'feedback'>
-
-function formatDateTime(dateStr: string | null) {
-  if (!dateStr) return '—'
-  return new Date(dateStr).toLocaleDateString('fr-FR', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  })
-}
 
 export function FeedbackDetail({
   feedback,
@@ -63,36 +53,36 @@ export function FeedbackDetail({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>Détail du feedback</DialogTitle>
+          <DialogTitle className="font-display text-xl">Détail du feedback</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
-          <div>
-            <p className="text-sm font-medium text-muted-foreground">Message</p>
-            <p className="mt-1 whitespace-pre-wrap">{feedback.message}</p>
+          <div className="rounded-lg bg-muted/50 p-4">
+            <p className="eyebrow mb-1.5">Message</p>
+            <p className="whitespace-pre-wrap leading-relaxed">{feedback.message}</p>
           </div>
           <Separator />
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
-              <p className="font-medium text-muted-foreground">Email</p>
+              <p className="eyebrow mb-0.5">Email</p>
               <p>{feedback.email || '—'}</p>
             </div>
             <div>
-              <p className="font-medium text-muted-foreground">Version</p>
+              <p className="eyebrow mb-0.5">Version</p>
               <p>{feedback.app_version}</p>
             </div>
             <div>
-              <p className="font-medium text-muted-foreground">Plateforme</p>
+              <p className="eyebrow mb-0.5">Plateforme</p>
               <p>{feedback.device_platform || '—'}</p>
             </div>
             <div>
-              <p className="font-medium text-muted-foreground">Date</p>
+              <p className="eyebrow mb-0.5">Date</p>
               <p>{formatDateTime(feedback.created_at)}</p>
             </div>
           </div>
           <Separator />
           <div className="flex items-center gap-4">
             <div className="flex-1">
-              <p className="mb-1.5 text-sm font-medium text-muted-foreground">Catégorie</p>
+              <p className="eyebrow mb-1.5">Catégorie</p>
               <Select
                 value={feedback.category || ''}
                 onValueChange={(value) =>
@@ -115,17 +105,8 @@ export function FeedbackDetail({
               </Select>
             </div>
             <div className="flex-1">
-              <p className="mb-1.5 text-sm font-medium text-muted-foreground">Statut</p>
-              <Badge
-                className={
-                  feedback.status === 'treated'
-                    ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300'
-                    : 'border-yellow-500 text-yellow-600'
-                }
-                variant={feedback.status === 'pending' ? 'outline' : 'default'}
-              >
-                {feedback.status === 'treated' ? 'Traité' : 'En attente'}
-              </Badge>
+              <p className="eyebrow mb-1.5">Statut</p>
+              <StatusBadge status={feedback.status} />
             </div>
           </div>
           <Button

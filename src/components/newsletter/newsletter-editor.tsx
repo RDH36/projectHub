@@ -16,9 +16,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { NewsletterPreview } from '@/components/newsletter-preview'
-import { NewsletterSend } from '@/components/newsletter-send'
-import { SubscriberSelector, type SendMode } from '@/components/subscriber-selector'
+import { NewsletterPreview } from '@/components/newsletter/newsletter-preview'
+import { NewsletterSend } from '@/components/newsletter/newsletter-send'
+import { SubscriberSelector, type SendMode } from '@/components/newsletter/subscriber-selector'
 import { saveTemplate } from '@/actions/newsletter.actions'
 import type { Tables } from '@/lib/types/database'
 
@@ -65,7 +65,7 @@ export function NewsletterEditor({
       : undefined
 
   return (
-    <div className="mt-4 space-y-6">
+    <div className="space-y-6">
       {/* Template loader */}
       {templates.length > 0 && (
         <div className="flex items-end gap-3">

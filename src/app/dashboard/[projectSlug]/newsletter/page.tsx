@@ -1,8 +1,8 @@
 import { createClient } from '@/lib/supabase/server'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Badge } from '@/components/ui/badge'
-import { NewsletterEditor } from '@/components/newsletter-editor'
-import { NewsletterHistory } from '@/components/newsletter-history'
+import { PageHeader, StatChip } from '@/components/layout/page-header'
+import { NewsletterEditor } from '@/components/newsletter/newsletter-editor'
+import { NewsletterHistory } from '@/components/newsletter/newsletter-history'
 
 export default async function NewsletterPage({
   params,
@@ -37,28 +37,36 @@ export default async function NewsletterPage({
   const subscribers = subscribersRes.data || []
 
   return (
-    <div className="flex flex-1 flex-col gap-6 p-6">
-      <div className="flex items-center gap-3">
-        <h1 className="text-2xl font-bold">Newsletter</h1>
-        <Badge variant="secondary">{subscribers.length} abonné(s)</Badge>
-      </div>
+    <>
+      <PageHeader
+        eyebrow="Communauté"
+        title="Newsletter"
+        description="Composez en HTML, prévisualisez, puis envoyez à tout ou partie des abonnés."
+        stats={
+          <>
+            <StatChip value={subscribers.length} label="abonnés" tone="primary" />
+            <StatChip value={templates.length} label="templates" />
+            <StatChip value={sends.length} label="envois récents" />
+          </>
+        }
+      />
 
-      <Tabs defaultValue="editor">
+      <Tabs defaultValue="editor" className="rise rise-2">
         <TabsList>
           <TabsTrigger value="editor">Éditeur</TabsTrigger>
           <TabsTrigger value="history">Historique</TabsTrigger>
         </TabsList>
-        <TabsContent value="editor">
+        <TabsContent value="editor" className="rounded-xl border bg-card p-5">
           <NewsletterEditor
             templates={templates}
             projectSlug={projectSlug}
             subscribers={subscribers}
           />
         </TabsContent>
-        <TabsContent value="history">
+        <TabsContent value="history" className="overflow-hidden rounded-xl border bg-card">
           <NewsletterHistory sends={sends} />
         </TabsContent>
       </Tabs>
-    </div>
+    </>
   )
 }

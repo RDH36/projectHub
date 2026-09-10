@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
-import { Badge } from '@/components/ui/badge'
-import { SurveyFilters } from '@/components/survey-filters'
-import { SurveyList } from '@/components/survey-list'
+import { PageHeader, StatChip } from '@/components/layout/page-header'
+import { SurveyFilters } from '@/components/surveys/survey-filters'
+import { SurveyList } from '@/components/surveys/survey-list'
 
 export default async function SurveysPage({
   params,
@@ -22,21 +22,25 @@ export default async function SurveysPage({
 
   const all = surveys || []
   const keys = [...new Set(all.map((s) => s.survey_key))].sort()
-  const filtered = search.key
-    ? all.filter((s) => s.survey_key === search.key)
-    : all
+  const filtered = search.key ? all.filter((s) => s.survey_key === search.key) : all
 
   return (
-    <div className="flex flex-col gap-6 p-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Sondages</h1>
-        <div className="flex gap-2">
-          <Badge variant="secondary">{all.length} réponses</Badge>
-          <Badge variant="outline">{keys.length} sondages</Badge>
-        </div>
+    <>
+      <PageHeader
+        eyebrow="Communauté"
+        title="Sondages"
+        description="Réponses aux sondages in-app, une ligne par réponse."
+        actions={<SurveyFilters keys={keys} />}
+        stats={
+          <>
+            <StatChip value={all.length} label="réponses" />
+            <StatChip value={keys.length} label="sondages" tone="primary" />
+          </>
+        }
+      />
+      <div className="rise rise-2 overflow-hidden rounded-xl border bg-card">
+        <SurveyList surveys={filtered} />
       </div>
-      <SurveyFilters keys={keys} />
-      <SurveyList surveys={filtered} />
-    </div>
+    </>
   )
 }

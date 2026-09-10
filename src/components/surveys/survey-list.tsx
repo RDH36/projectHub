@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { Tables } from '@/lib/types/database'
 import { responseSummary } from '@/lib/survey'
+import { formatDate } from '@/lib/format'
 import { Badge } from '@/components/ui/badge'
 import {
   Table,
@@ -12,26 +13,17 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { SurveyDetail } from '@/components/survey-detail'
+import { SurveyDetail } from '@/components/surveys/survey-detail'
 
 type Survey = Tables<'feature_surveys'>
-
-function formatDate(dateStr: string | null) {
-  if (!dateStr) return '—'
-  return new Date(dateStr).toLocaleDateString('fr-FR', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-  })
-}
 
 export function SurveyList({ surveys }: { surveys: Survey[] }) {
   const [selected, setSelected] = useState<Survey | null>(null)
 
   if (surveys.length === 0) {
     return (
-      <div className="flex items-center justify-center rounded-lg border border-dashed p-12">
-        <p className="text-muted-foreground">Aucun sondage pour ce projet</p>
+      <div className="p-14 text-center text-sm text-muted-foreground">
+        Aucune réponse de sondage pour ce projet.
       </div>
     )
   }
@@ -39,13 +31,13 @@ export function SurveyList({ surveys }: { surveys: Survey[] }) {
   return (
     <>
       <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Sondage</TableHead>
-            <TableHead className="w-[40%]">Réponse</TableHead>
-            <TableHead>Email</TableHead>
-            <TableHead>Plateforme</TableHead>
-            <TableHead>Date</TableHead>
+        <TableHeader className="bg-muted/40">
+          <TableRow className="hover:bg-transparent">
+            <TableHead className="eyebrow h-10">Sondage</TableHead>
+            <TableHead className="eyebrow h-10 w-[40%]">Réponse</TableHead>
+            <TableHead className="eyebrow h-10">Email</TableHead>
+            <TableHead className="eyebrow h-10">Plateforme</TableHead>
+            <TableHead className="eyebrow h-10 text-right">Date</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -69,7 +61,7 @@ export function SurveyList({ surveys }: { surveys: Survey[] }) {
               <TableCell className="text-muted-foreground">
                 {survey.device_platform || '—'}
               </TableCell>
-              <TableCell className="text-muted-foreground">
+              <TableCell className="text-right text-muted-foreground tabular">
                 {formatDate(survey.created_at)}
               </TableCell>
             </TableRow>
