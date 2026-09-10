@@ -55,6 +55,23 @@ export type VercelAnalytics = {
   devices: RankedItem[]
 }
 
+export type RevenueCatMetric = {
+  id: string
+  label: string
+  value: number
+  /** '$' = montant dans `currency`, '#' = compteur */
+  unit: '$' | '#'
+  /** Durée ISO 8601 (P0D = instantané, P28D = 28 jours glissants) */
+  period: string
+  description: string
+}
+
+export type RevenueCatAnalytics = {
+  currency: string
+  metrics: RevenueCatMetric[]
+  updatedAt: string | null
+}
+
 /**
  * État d'une source externe. `unconfigured` = il manque une clé ou un
  * paramètre projet ; `error` = l'API a répondu mais a échoué.

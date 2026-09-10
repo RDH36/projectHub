@@ -1,7 +1,9 @@
 'use client'
 
+import { useState, useTransition } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { Check, ChevronsUpDown } from 'lucide-react'
+import { ScreenOverlay } from '@/components/layout/screen-overlay'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -47,16 +49,35 @@ export function ProjectSwitcher({
 }) {
   const pathname = usePathname()
   const router = useRouter()
+  const [isPending, startTransition] = useTransition()
+  const [target, setTarget] = useState<{ name: string; index: number } | null>(null)
   const currentIndex = Math.max(projects.findIndex((p) => p.slug === currentSlug), 0)
   const current = projects[currentIndex]
 
-  function switchTo(slug: string) {
+  function switchTo(project: Project, index: number) {
+    if (project.slug === currentSlug) return
     // Conserve la section courante (feedbacks, analytics…) en changeant de projet
-    const next = pathname.replace(`/dashboard/${currentSlug}`, `/dashboard/${slug}`)
-    router.push(next)
+    const next = pathname.replace(`/dashboard/${currentSlug}`, `/dashboard/${project.slug}`)
+    setTarget({ name: project.name, index })
+    // La transition reste « pending » jusqu'à ce que la nouvelle page soit rendue
+    startTransition(() => router.push(next))
   }
 
   return (
+    <>
+      {isPending && target ? (
+        <ScreenOverlay
+          eyebrow="Changement de projet"
+          title={target.name}
+          icon={
+            <ProjectMark
+              name={target.name}
+              index={target.index}
+              className="size-16 rounded-2xl text-2xl shadow-lg shadow-primary/10"
+            />
+          }
+        />
+      ) : null}
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <SidebarMenuButton
@@ -80,7 +101,7 @@ export function ProjectSwitcher({
         {projects.map((project, index) => (
           <DropdownMenuItem
             key={project.id}
-            onSelect={() => switchTo(project.slug)}
+            onSelect={() => switchTo(project, index)}
             className="gap-2.5"
           >
             <ProjectMark name={project.name} index={index} className="size-6 rounded-md text-xs" />
@@ -90,5 +111,6 @@ export function ProjectSwitcher({
         ))}
       </DropdownMenuContent>
     </DropdownMenu>
+    </>
   )
 }

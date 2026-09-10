@@ -1,6 +1,12 @@
 import { PlugZap } from 'lucide-react'
 import { StatTile } from '@/components/analytics/stat-tile'
-import type { PosthogAnalytics, SourceState, VercelAnalytics } from '@/lib/analytics/types'
+import { formatMoney } from '@/lib/format'
+import type {
+  PosthogAnalytics,
+  RevenueCatAnalytics,
+  SourceState,
+  VercelAnalytics,
+} from '@/lib/analytics/types'
 
 function ConnectTile({ label, name, reason }: { label: string; name: string; reason: string }) {
   return (
@@ -21,9 +27,30 @@ function ConnectTile({ label, name, reason }: { label: string; name: string; rea
   )
 }
 
+/** Tuile MRR : n'apparaît que si RevenueCat est branché (sinon la ligne garde 4 tuiles). */
+function MrrTile({ data }: { data: RevenueCatAnalytics }) {
+  const mrr = data.metrics.find((m) => m.id === 'mrr')
+  const subs = data.metrics.find((m) => m.id === 'active_subscriptions')
+  if (!mrr) return null
+  return (
+    <div className="flex flex-col justify-between gap-4 rounded-xl border bg-card p-5 transition-colors hover:border-foreground/20">
+      <p className="eyebrow">MRR</p>
+      <div>
+        <p className="font-display text-4xl font-semibold leading-none tracking-tight tabular">
+          {formatMoney(mrr.value, data.currency)}
+        </p>
+        <p className="mt-2 text-xs text-muted-foreground">
+          {subs ? `${subs.value} abonnement${subs.value > 1 ? 's' : ''} actif${subs.value > 1 ? 's' : ''}` : 'revenu mensuel récurrent'}
+        </p>
+      </div>
+    </div>
+  )
+}
+
 type Props = {
   posthog: SourceState<PosthogAnalytics>
   vercel: SourceState<VercelAnalytics>
+  revenuecat: SourceState<RevenueCatAnalytics>
   pendingFeedbacks: number
   totalFeedbacks: number
   subscribers: number
@@ -34,14 +61,21 @@ type Props = {
 export function KpiRow({
   posthog,
   vercel,
+  revenuecat,
   pendingFeedbacks,
   totalFeedbacks,
   subscribers,
   newSubscribers,
   prevNewSubscribers,
 }: Props) {
+  const showMrr = revenuecat.status === 'ok' && revenuecat.data.metrics.some((m) => m.id === 'mrr')
   return (
-    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <div className={showMrr ? 'grid gap-4 sm:grid-cols-2 xl:grid-cols-5' : 'grid gap-4 sm:grid-cols-2 xl:grid-cols-4'}>
+      {showMrr && revenuecat.status === 'ok' ? (
+        <div className="rise rise-1">
+          <MrrTile data={revenuecat.data} />
+        </div>
+      ) : null}
       <div className="rise rise-1">
         {posthog.status === 'ok' ? (
           <StatTile

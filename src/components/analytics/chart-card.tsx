@@ -1,11 +1,12 @@
 import { cn } from '@/lib/utils'
 
-export type Source = 'posthog' | 'vercel' | 'supabase'
+export type Source = 'posthog' | 'vercel' | 'supabase' | 'revenuecat'
 
 const SOURCE_LABEL: Record<Source, string> = {
   posthog: 'PostHog',
   vercel: 'Vercel',
   supabase: 'Supabase',
+  revenuecat: 'RevenueCat',
 }
 
 export function SourcePill({ source }: { source: Source }) {
@@ -16,7 +17,8 @@ export function SourcePill({ source }: { source: Source }) {
           'size-1.5 rounded-full',
           source === 'posthog' && 'bg-chart-6',
           source === 'vercel' && 'bg-foreground',
-          source === 'supabase' && 'bg-chart-3'
+          source === 'supabase' && 'bg-chart-3',
+          source === 'revenuecat' && 'bg-chart-5'
         )}
       />
       {SOURCE_LABEL[source]}

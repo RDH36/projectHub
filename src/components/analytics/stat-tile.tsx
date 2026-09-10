@@ -18,8 +18,8 @@ type Props = {
 
 function Sparkline({ points }: { points: number[] }) {
   if (points.length < 2) return null
-  const w = 96
-  const h = 28
+  const w = 72
+  const h = 22
   const max = Math.max(...points, 1)
   const step = w / (points.length - 1)
   const coords = points.map((p, i) => [i * step, h - (p / max) * (h - 3) - 1] as const)
@@ -64,30 +64,30 @@ export function StatTile({
         className
       )}
     >
-      <p className="eyebrow">{label}</p>
-      <div className="flex items-end justify-between gap-3">
-        <div className="min-w-0">
-          <p className="font-display text-4xl font-semibold leading-none tracking-tight tabular">
-            {formatCompact(value)}
-          </p>
-          <div className="mt-2 flex items-center gap-1.5 text-xs">
-            {changeText ? (
-              <span
-                className={cn(
-                  'inline-flex shrink-0 items-center gap-0.5 whitespace-nowrap rounded-md px-1.5 py-0.5 font-medium tabular',
-                  good === true && 'bg-success/12 text-success',
-                  good === false && 'bg-destructive/10 text-destructive',
-                  good === null && 'bg-muted text-muted-foreground'
-                )}
-              >
-                <Icon className="size-3" />
-                {changeText}
-              </span>
-            ) : null}
-            {hint ? <span className="text-muted-foreground">{hint}</span> : null}
-          </div>
-        </div>
+      <div className="flex items-start justify-between gap-3">
+        <p className="eyebrow">{label}</p>
         {sparkline ? <Sparkline points={sparkline} /> : null}
+      </div>
+      <div className="min-w-0">
+        <p className="font-display text-4xl font-semibold leading-none tracking-tight tabular">
+          {formatCompact(value)}
+        </p>
+        <div className="mt-2 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-xs">
+          {changeText ? (
+            <span
+              className={cn(
+                'inline-flex shrink-0 items-center gap-0.5 whitespace-nowrap rounded-md px-1.5 py-0.5 font-medium tabular',
+                good === true && 'bg-success/12 text-success',
+                good === false && 'bg-destructive/10 text-destructive',
+                good === null && 'bg-muted text-muted-foreground'
+              )}
+            >
+              <Icon className="size-3" />
+              {changeText}
+            </span>
+          ) : null}
+          {hint ? <span className="text-muted-foreground">{hint}</span> : null}
+        </div>
       </div>
     </div>
   )

@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { resolveRange } from '@/lib/analytics/range'
 import { getPosthogAnalytics } from '@/lib/analytics/posthog'
 import { getVercelAnalytics } from '@/lib/analytics/vercel'
+import { getRevenueCatAnalytics } from '@/lib/analytics/revenuecat'
 import { PageHeader } from '@/components/layout/page-header'
 import { RangePicker } from '@/components/analytics/range-picker'
 import { KpiRow } from '@/components/overview/kpi-row'
@@ -32,10 +33,11 @@ export default async function OverviewPage({
   const sinceIso = `${range.since}T00:00:00Z`
   const prevSinceIso = `${range.prevSince}T00:00:00Z`
 
-  const [posthog, vercel, feedbacksRes, subscribersRes, sendsRes, surveysRes] =
+  const [posthog, vercel, revenuecat, feedbacksRes, subscribersRes, sendsRes, surveysRes] =
     await Promise.all([
       getPosthogAnalytics(project, range),
       getVercelAnalytics(project, range),
+      getRevenueCatAnalytics(project),
       supabase
         .from('feedback')
         .select('*')
@@ -80,6 +82,7 @@ export default async function OverviewPage({
       <KpiRow
         posthog={posthog}
         vercel={vercel}
+        revenuecat={revenuecat}
         pendingFeedbacks={pending}
         totalFeedbacks={feedbacks.length}
         subscribers={subscribers.length}

@@ -13,6 +13,19 @@ export function formatNumber(value: number) {
   return plain.format(value)
 }
 
+/** 1234.5 → « 1 234,50 $US » ; devise ISO (USD, EUR…) */
+export function formatMoney(value: number, currency: string) {
+  try {
+    return new Intl.NumberFormat('fr-FR', {
+      style: 'currency',
+      currency,
+      maximumFractionDigits: value >= 1000 ? 0 : 2,
+    }).format(value)
+  } catch {
+    return `${plain.format(value)} ${currency}`
+  }
+}
+
 /** +12,5 % / −3 % ; null si non calculable */
 export function formatPercent(value: number | null, digits = 0) {
   if (value === null || !Number.isFinite(value)) return null

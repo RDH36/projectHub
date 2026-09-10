@@ -46,8 +46,6 @@ export function kpiQuery(scope: Scope, range: AnalyticsRange) {
 SELECT
   uniqIf(person_id, timestamp >= ${b.cur}) AS users,
   uniqIf(person_id, timestamp < ${b.cur}) AS users_prev,
-  uniqIf(person_id, timestamp >= ${b.cur} AND person.created_at >= ${b.cur}) AS new_users,
-  uniqIf(person_id, timestamp < ${b.cur} AND person.created_at >= ${b.prev} AND person.created_at < ${b.cur}) AS new_users_prev,
   uniqIf(properties.$session_id, timestamp >= ${b.cur}) AS sessions,
   uniqIf(properties.$session_id, timestamp < ${b.cur}) AS sessions_prev,
   countIf(timestamp >= ${b.cur}) AS events,
@@ -62,10 +60,34 @@ export function dailyQuery(scope: Scope, range: AnalyticsRange) {
 SELECT
   toDate(timestamp) AS date,
   uniq(person_id) AS users,
-  uniqIf(person_id, toDate(person.created_at) = toDate(timestamp)) AS new_users,
   uniq(properties.$session_id) AS sessions
 FROM events
 WHERE ${baseWhere(scope, b.cur, b.end)}
+GROUP BY date
+ORDER BY date`
+}
+
+/**
+ * Nouveaux utilisateurs par jour de première apparition, sur la période
+ * courante et la précédente. On regarde une fenêtre de 3× la période pour
+ * distinguer un nouveau venu d'un utilisateur de retour. `person.created_at`
+ * est utilisé quand il est fiable ; certaines apps (personnes anonymes) ont
+ * une date à 1970, d'où le repli sur le premier événement observé.
+ */
+export function newUsersQuery(scope: Scope, range: AnalyticsRange) {
+  const b = bounds(range)
+  const lookback = `${b.prev} - INTERVAL ${range.days} DAY`
+  return `
+SELECT toDate(first_seen) AS date, count() AS new_users
+FROM (
+  SELECT
+    person_id,
+    if(any(person.created_at) > toDateTime('2000-01-01 00:00:00'), any(person.created_at), min(timestamp)) AS first_seen
+  FROM events
+  WHERE ${baseWhere(scope, lookback, b.end)}
+  GROUP BY person_id
+)
+WHERE first_seen >= ${b.prev}
 GROUP BY date
 ORDER BY date`
 }

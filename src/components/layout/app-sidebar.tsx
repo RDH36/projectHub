@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
@@ -27,6 +28,7 @@ import {
   SidebarRail,
 } from '@/components/ui/sidebar'
 import { ProjectSwitcher } from '@/components/layout/project-switcher'
+import { ScreenOverlay } from '@/components/layout/screen-overlay'
 import type { Tables } from '@/lib/types/database'
 
 type Project = Tables<'projects'>
@@ -45,6 +47,18 @@ export function AppSidebar({
 }) {
   const pathname = usePathname()
   const base = `/dashboard/${currentSlug}`
+  const [signingOut, setSigningOut] = useState(false)
+
+  async function handleSignOut(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    setSigningOut(true)
+    try {
+      await fetch('/auth/signout', { method: 'POST', redirect: 'follow' })
+    } finally {
+      // Navigation complète : purge l'état client et affiche /login
+      window.location.assign('/login')
+    }
+  }
 
   const groups: NavGroup[] = [
     {
@@ -125,9 +139,10 @@ export function AppSidebar({
       <SidebarFooter>
         <SidebarMenu>
           <SidebarMenuItem>
-            <form action="/auth/signout" method="POST">
+            <form action="/auth/signout" method="POST" onSubmit={handleSignOut}>
               <SidebarMenuButton
                 type="submit"
+                disabled={signingOut}
                 className="w-full text-muted-foreground hover:text-foreground"
                 tooltip="Se déconnecter"
               >
@@ -139,6 +154,17 @@ export function AppSidebar({
         </SidebarMenu>
       </SidebarFooter>
       <SidebarRail />
+      {signingOut ? (
+        <ScreenOverlay
+          eyebrow="À bientôt"
+          title="Déconnexion…"
+          icon={
+            <span className="flex size-16 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/10">
+              <LogOut className="size-7" />
+            </span>
+          }
+        />
+      ) : null}
     </Sidebar>
   )
 }

@@ -12,6 +12,7 @@ import {
   countriesQuery,
   dailyQuery,
   kpiQuery,
+  newUsersQuery,
   scopeFor,
   topEventsQuery,
   topScreensQuery,
@@ -56,21 +57,35 @@ function toRanked(rows: Row[]): RankedItem[] {
   return rows.map((row) => ({ label: String(row.label ?? ''), value: num(row.value) }))
 }
 
-function toDaily(rows: Row[], range: AnalyticsRange): PosthogDaily[] {
-  const byDay = new Map(
-    rows.map((row) => [
-      String(row.date).slice(0, 10),
-      {
-        date: String(row.date).slice(0, 10),
-        users: num(row.users),
-        newUsers: num(row.new_users),
-        sessions: num(row.sessions),
-      },
-    ])
-  )
-  return eachDay(range).map(
-    (date) => byDay.get(date) ?? { date, users: 0, newUsers: 0, sessions: 0 }
-  )
+function toDaily(rows: Row[], newByDay: Map<string, number>, range: AnalyticsRange): PosthogDaily[] {
+  const byDay = new Map(rows.map((row) => [String(row.date).slice(0, 10), row]))
+  return eachDay(range).map((date) => {
+    const row = byDay.get(date)
+    return {
+      date,
+      users: num(row?.users),
+      newUsers: newByDay.get(date) ?? 0,
+      sessions: num(row?.sessions),
+    }
+  })
+}
+
+/** Sépare les nouveaux utilisateurs entre période courante et précédente. */
+function splitNewUsers(rows: Row[], range: AnalyticsRange) {
+  const byDay = new Map<string, number>()
+  let current = 0
+  let previous = 0
+  for (const row of rows) {
+    const date = String(row.date).slice(0, 10)
+    const count = num(row.new_users)
+    if (date >= range.since) {
+      current += count
+      byDay.set(date, count)
+    } else if (date >= range.prevSince) {
+      previous += count
+    }
+  }
+  return { byDay, current, previous }
 }
 
 export async function getPosthogAnalytics(
@@ -92,25 +107,27 @@ export async function getPosthogAnalytics(
   }
 
   try {
-    const [kpis, daily, topEvents, topScreens, countries, versions] = await Promise.all([
+    const [kpis, daily, newUsers, topEvents, topScreens, countries, versions] = await Promise.all([
       hogql(kpiQuery(scope, range)),
       hogql(dailyQuery(scope, range)),
+      hogql(newUsersQuery(scope, range)),
       hogql(topEventsQuery(scope, range)),
       hogql(topScreensQuery(scope, range)),
       hogql(countriesQuery(scope, range)),
       hogql(versionsQuery(scope, range)),
     ])
     const k = kpis[0] ?? {}
+    const fresh = splitNewUsers(newUsers, range)
 
     return {
       status: 'ok',
       data: {
         kind: scope.kind,
         activeUsers: { value: num(k.users), previous: num(k.users_prev) },
-        newUsers: { value: num(k.new_users), previous: num(k.new_users_prev) },
+        newUsers: { value: fresh.current, previous: fresh.previous },
         sessions: { value: num(k.sessions), previous: num(k.sessions_prev) },
         events: { value: num(k.events), previous: num(k.events_prev) },
-        daily: toDaily(daily, range),
+        daily: toDaily(daily, fresh.byDay, range),
         topEvents: toRanked(topEvents),
         topScreens: toRanked(topScreens),
         countries: toRanked(countries),

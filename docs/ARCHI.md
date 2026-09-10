@@ -430,3 +430,15 @@ ALTER TABLE projects
 ### Design system
 
 Palette « papier & encre » (surfaces chaudes, accent orange brûlé), police d'affichage Bricolage Grotesque + Geist, mode sombre via `next-themes`. Les couleurs de graphique `--chart-1..6` forment une palette validée (daltonisme, contraste) : ne pas réordonner sans re-valider.
+
+### RevenueCat (ajouté le 10/09/2026)
+
+| Source | Données | Accès | Isolation par projet |
+|--------|---------|-------|----------------------|
+| **RevenueCat** | MRR, revenus 28 j, abonnements actifs, essais actifs, nouveaux clients, utilisateurs actifs | API v2 `GET /v2/projects/:id/metrics/overview`, clé secrète v2 (`REVENUECAT_API_KEY`, ou `REVENUECAT_API_KEY_<SLUG>` par projet), 25 req/min → cache 10 min | `projects.revenuecat_project_id` (`proj…`) |
+
+Code : `src/lib/analytics/revenuecat.ts`, section « Abonnements et revenus » de `/analytics`, tuile MRR sur la vue d'ensemble (affichée seulement si la source est branchée). Migration `add_revenuecat_project_id_to_projects`.
+
+### Transitions plein écran
+
+`components/layout/screen-overlay.tsx` (portail, voile flouté) est affiché pendant le changement de projet (`useTransition` autour de `router.push`) et pendant la déconnexion (POST `/auth/signout` en `fetch`, puis `window.location.assign('/login')`).

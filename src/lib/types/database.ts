@@ -177,6 +177,7 @@ export type Database = {
           name: string
           posthog_app_name: string | null
           posthog_host: string | null
+          revenuecat_project_id: string | null
           slug: string
           vercel_project_id: string | null
         }
@@ -186,6 +187,7 @@ export type Database = {
           name: string
           posthog_app_name?: string | null
           posthog_host?: string | null
+          revenuecat_project_id?: string | null
           slug: string
           vercel_project_id?: string | null
         }
@@ -195,6 +197,7 @@ export type Database = {
           name?: string
           posthog_app_name?: string | null
           posthog_host?: string | null
+          revenuecat_project_id?: string | null
           slug?: string
           vercel_project_id?: string | null
         }

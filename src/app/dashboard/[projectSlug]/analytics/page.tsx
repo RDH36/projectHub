@@ -3,10 +3,12 @@ import { createClient } from '@/lib/supabase/server'
 import { resolveRange } from '@/lib/analytics/range'
 import { getPosthogAnalytics } from '@/lib/analytics/posthog'
 import { getVercelAnalytics } from '@/lib/analytics/vercel'
+import { getRevenueCatAnalytics } from '@/lib/analytics/revenuecat'
 import { PageHeader } from '@/components/layout/page-header'
 import { RangePicker } from '@/components/analytics/range-picker'
 import { PosthogSection } from './posthog-section'
 import { VercelSection } from './vercel-section'
+import { RevenueCatSection } from './revenuecat-section'
 
 export default async function AnalyticsPage({
   params,
@@ -27,9 +29,10 @@ export default async function AnalyticsPage({
     .single()
   if (!project) notFound()
 
-  const [posthog, vercel] = await Promise.all([
+  const [posthog, vercel, revenuecat] = await Promise.all([
     getPosthogAnalytics(project, range),
     getVercelAnalytics(project, range),
+    getRevenueCatAnalytics(project),
   ])
 
   return (
@@ -37,11 +40,12 @@ export default async function AnalyticsPage({
       <PageHeader
         eyebrow={`Analytics · ${range.label}`}
         title="Analytics"
-        description="Usage produit mesuré par PostHog et trafic web mesuré par Vercel, comparés à la période précédente."
+        description="Usage produit (PostHog), trafic web (Vercel) et revenus (RevenueCat), comparés à la période précédente quand c’est possible."
         actions={<RangePicker current={range.key} basePath={`/dashboard/${projectSlug}/analytics`} />}
       />
       <PosthogSection state={posthog} />
       <VercelSection state={vercel} />
+      <RevenueCatSection state={revenuecat} />
     </>
   )
 }
