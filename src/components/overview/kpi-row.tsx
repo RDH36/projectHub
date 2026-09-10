@@ -10,7 +10,7 @@ import type {
 
 function ConnectTile({ label, name, reason }: { label: string; name: string; reason: string }) {
   return (
-    <div className="flex flex-col justify-between gap-4 rounded-xl border border-dashed p-5">
+    <div className="flex h-full flex-col justify-between gap-4 rounded-xl border border-dashed p-5">
       <p className="eyebrow">{label}</p>
       <div className="flex items-start gap-3">
         <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-accent text-accent-foreground">
@@ -33,13 +33,13 @@ function MrrTile({ data }: { data: RevenueCatAnalytics }) {
   const subs = data.metrics.find((m) => m.id === 'active_subscriptions')
   if (!mrr) return null
   return (
-    <div className="flex flex-col justify-between gap-4 rounded-xl border bg-card p-5 transition-colors hover:border-foreground/20">
+    <div className="flex h-full flex-col justify-between gap-4 rounded-xl border bg-card p-5 transition-colors hover:border-foreground/20">
       <p className="eyebrow">MRR</p>
-      <div>
+      <div className="min-w-0">
         <p className="font-display text-4xl font-semibold leading-none tracking-tight tabular">
           {formatMoney(mrr.value, data.currency)}
         </p>
-        <p className="mt-2 text-xs text-muted-foreground">
+        <p className="mt-2 flex h-5 items-center truncate text-xs text-muted-foreground">
           {subs ? `${subs.value} abonnement${subs.value > 1 ? 's' : ''} actif${subs.value > 1 ? 's' : ''}` : 'revenu mensuel récurrent'}
         </p>
       </div>
@@ -130,7 +130,7 @@ export function KpiRow({
           hint={
             newSubscribers > 0
               ? `+${newSubscribers} sur la période (${prevNewSubscribers} avant)`
-              : 'aucun nouvel abonné sur la période'
+              : 'aucun nouvel abonné'
           }
         />
       </div>

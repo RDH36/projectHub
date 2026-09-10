@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
+import Image from 'next/image'
 import { usePathname, useRouter } from 'next/navigation'
 import { Check, ChevronsUpDown } from 'lucide-react'
 import { ScreenOverlay } from '@/components/layout/screen-overlay'
@@ -20,8 +21,28 @@ type Project = Tables<'projects'>
 
 const HUES = [40, 200, 150, 280, 330, 80]
 
-/** Pastille colorée déterministe par projet (initiale + teinte). */
-export function ProjectMark({ name, index, className }: { name: string; index: number; className?: string }) {
+/** Logo du projet s'il existe, sinon pastille colorée déterministe (initiale + teinte). */
+export function ProjectMark({
+  name,
+  index,
+  logoUrl,
+  className,
+}: {
+  name: string
+  index: number
+  logoUrl?: string | null
+  className?: string
+}) {
+  if (logoUrl) {
+    return (
+      <span
+        aria-hidden
+        className={cn('relative size-8 shrink-0 overflow-hidden rounded-lg bg-muted', className)}
+      >
+        <Image src={logoUrl} alt="" fill sizes="64px" className="object-cover" />
+      </span>
+    )
+  }
   const hue = HUES[index % HUES.length]
   return (
     <span
@@ -50,7 +71,7 @@ export function ProjectSwitcher({
   const pathname = usePathname()
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
-  const [target, setTarget] = useState<{ name: string; index: number } | null>(null)
+  const [target, setTarget] = useState<{ name: string; index: number; logoUrl: string | null } | null>(null)
   const currentIndex = Math.max(projects.findIndex((p) => p.slug === currentSlug), 0)
   const current = projects[currentIndex]
 
@@ -58,7 +79,7 @@ export function ProjectSwitcher({
     if (project.slug === currentSlug) return
     // Conserve la section courante (feedbacks, analytics…) en changeant de projet
     const next = pathname.replace(`/dashboard/${currentSlug}`, `/dashboard/${project.slug}`)
-    setTarget({ name: project.name, index })
+    setTarget({ name: project.name, index, logoUrl: project.logo_url })
     // La transition reste « pending » jusqu'à ce que la nouvelle page soit rendue
     startTransition(() => router.push(next))
   }
@@ -73,6 +94,7 @@ export function ProjectSwitcher({
             <ProjectMark
               name={target.name}
               index={target.index}
+              logoUrl={target.logoUrl}
               className="size-16 rounded-2xl text-2xl shadow-lg shadow-primary/10"
             />
           }
@@ -85,7 +107,11 @@ export function ProjectSwitcher({
           className="data-[state=open]:bg-sidebar-accent"
           tooltip={current?.name ?? currentSlug}
         >
-          <ProjectMark name={current?.name ?? currentSlug} index={currentIndex} />
+          <ProjectMark
+            name={current?.name ?? currentSlug}
+            index={currentIndex}
+            logoUrl={current?.logo_url}
+          />
           <div className="grid flex-1 text-left leading-tight">
             <span className="eyebrow text-[0.625rem]">Projet</span>
             <span className="truncate font-display text-sm font-semibold">
@@ -104,7 +130,12 @@ export function ProjectSwitcher({
             onSelect={() => switchTo(project, index)}
             className="gap-2.5"
           >
-            <ProjectMark name={project.name} index={index} className="size-6 rounded-md text-xs" />
+            <ProjectMark
+              name={project.name}
+              index={index}
+              logoUrl={project.logo_url}
+              className="size-6 rounded-md text-xs"
+            />
             <span className="flex-1 truncate">{project.name}</span>
             {project.slug === currentSlug ? <Check className="size-4" /> : null}
           </DropdownMenuItem>

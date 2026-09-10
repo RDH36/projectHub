@@ -1,9 +1,11 @@
+import Image from 'next/image'
 import { LoginForm } from './login-form'
 
-const PROJECT_MARKS = [
-  { letter: 'M', hue: 40 },
-  { letter: 'F', hue: 200 },
-  { letter: 'C', hue: 150 },
+const PROJECT_LOGOS = [
+  { name: 'Mitsitsy', src: '/projects/mitsitsy.png' },
+  { name: 'Flipia', src: '/projects/flipia.png' },
+  { name: 'Clearway', src: '/projects/clearway.png' },
+  { name: 'Monster Cannon', src: '/projects/monster-cannon.png' },
 ]
 
 export default function LoginPage() {
@@ -44,16 +46,13 @@ export default function LoginPage() {
 
         <div className="relative flex items-center gap-3">
           <div className="flex -space-x-2">
-            {PROJECT_MARKS.map((m) => (
+            {PROJECT_LOGOS.map((logo) => (
               <span
-                key={m.letter}
-                className="flex size-9 items-center justify-center rounded-lg border-2 border-sidebar font-display text-sm font-bold"
-                style={{
-                  background: `oklch(0.92 0.06 ${m.hue})`,
-                  color: `oklch(0.38 0.13 ${m.hue})`,
-                }}
+                key={logo.name}
+                title={logo.name}
+                className="relative size-9 overflow-hidden rounded-lg border-2 border-sidebar bg-muted"
               >
-                {m.letter}
+                <Image src={logo.src} alt={logo.name} fill sizes="36px" className="object-cover" />
               </span>
             ))}
           </div>

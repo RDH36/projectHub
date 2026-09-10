@@ -60,7 +60,7 @@ export function StatTile({
   return (
     <div
       className={cn(
-        'group relative flex flex-col justify-between gap-4 rounded-xl border bg-card p-5 transition-colors hover:border-foreground/20',
+        'group relative flex h-full flex-col justify-between gap-4 rounded-xl border bg-card p-5 transition-colors hover:border-foreground/20',
         className
       )}
     >
@@ -72,7 +72,7 @@ export function StatTile({
         <p className="font-display text-4xl font-semibold leading-none tracking-tight tabular">
           {formatCompact(value)}
         </p>
-        <div className="mt-2 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-xs">
+        <div className="mt-2 flex h-5 min-w-0 items-center gap-1.5 whitespace-nowrap text-xs">
           {changeText ? (
             <span
               className={cn(
@@ -86,7 +86,7 @@ export function StatTile({
               {changeText}
             </span>
           ) : null}
-          {hint ? <span className="text-muted-foreground">{hint}</span> : null}
+          {hint ? <span className="truncate text-muted-foreground" title={hint}>{hint}</span> : null}
         </div>
       </div>
     </div>

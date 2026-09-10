@@ -174,6 +174,7 @@ export type Database = {
         Row: {
           created_at: string | null
           id: string
+          logo_url: string | null
           name: string
           posthog_app_name: string | null
           posthog_host: string | null
@@ -184,6 +185,7 @@ export type Database = {
         Insert: {
           created_at?: string | null
           id?: string
+          logo_url?: string | null
           name: string
           posthog_app_name?: string | null
           posthog_host?: string | null
@@ -194,6 +196,7 @@ export type Database = {
         Update: {
           created_at?: string | null
           id?: string
+          logo_url?: string | null
           name?: string
           posthog_app_name?: string | null
           posthog_host?: string | null
